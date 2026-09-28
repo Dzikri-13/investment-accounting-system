@@ -1,0 +1,12 @@
+# OS
+.DS_Store
+Thumbs.db
+
+# Editors
+.vscode/
+
+# Local environment
+.env
+.env.*
+
+# Never commit service-role/server secrets.

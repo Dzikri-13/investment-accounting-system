@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Investment Accounting System</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+</head>
+<body>
+  <div id="toast-container"></div>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-mark">IA</div>
+        <div>
+          <strong>InvestAcc</strong>
+          <span>Accounting System</span>
+        </div>
+      </div>
+      <nav>
+        <button class="nav-item active" data-page="dashboard">▦ <span>Dashboard</span></button>
+        <button class="nav-item" data-page="transactions">⇄ <span>Transactions</span></button>
+        <button class="nav-item" data-page="portfolio">◫ <span>Portfolio</span></button>
+        <button class="nav-item" data-page="fair-value">⌁ <span>Fair Value Adjustment</span></button>
+        <button class="nav-item" data-page="dividends">◉ <span>Dividends</span></button>
+        <button class="nav-item" data-page="journal">▤ <span>Journal Entries</span></button>
+        <button class="nav-item" data-page="reports">◒ <span>Reports</span></button>
+      </nav>
+      <div class="sidebar-footer">
+        <div class="connection-dot"><i></i> Supabase Connected</div>
+        <small>Investment Accounting v1.3</small>
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div>
+          <div class="eyebrow">CORPORATE INVESTMENT</div>
+          <h1 id="page-title">Investment Dashboard</h1>
+        </div>
+        <div class="top-actions">
+          <span id="last-updated">Updating...</span>
+          <button class="primary-btn" id="quick-add-btn">+ New Transaction</button>
+        </div>
+      </header>
+
+      <section id="page-dashboard" class="page active">
+        <div class="hero">
+          <div>
+            <span class="eyebrow">PORTFOLIO OVERVIEW</span>
+            <h2>Investment position at a glance.</h2>
+            <p>Monitor investment cost, market value, realized gain, unrealized gain and dividend income in one place.</p>
+          </div>
+          <div class="hero-stat">
+            <span>Portfolio Return</span>
+            <strong id="hero-return">Rp 0</strong>
+            <small id="hero-return-pct">0.00%</small>
+          </div>
+        </div>
+
+        <div class="cards-grid">
+          <div class="metric-card"><span>Total Invested</span><strong id="total-invested">Rp 0</strong><small>Net investment cost</small></div>
+          <div class="metric-card"><span>Market Value</span><strong id="market-value">Rp 0</strong><small>Based on latest price</small></div>
+          <div class="metric-card positive"><span>Unrealized Gain</span><strong id="unrealized-gain">Rp 0</strong><small>Open positions</small></div>
+          <div class="metric-card"><span>Realized Gain</span><strong id="realized-gain">Rp 0</strong><small>Closed positions</small></div>
+          <div class="metric-card"><span>Dividend Income</span><strong id="dividend-income">Rp 0</strong><small>Cash dividends received</small></div>
+          <div class="metric-card"><span>Cash Balance</span><strong id="cash-balance">Rp 0</strong><small>Available investment cash</small></div>
+        </div>
+
+        <div class="two-col">
+          <div class="panel">
+            <div class="panel-head"><div><span class="eyebrow">ALLOCATION</span><h3>Portfolio Allocation</h3></div></div>
+            <div class="chart-wrap"><canvas id="allocation-chart"></canvas></div>
+          </div>
+          <div class="panel">
+            <div class="panel-head"><div><span class="eyebrow">RECENT ACTIVITY</span><h3>Latest Transactions</h3></div><button class="text-btn" data-page-jump="transactions">View all →</button></div>
+            <div id="recent-transactions" class="activity-list"></div>
+          </div>
+        </div>
+      </section>
+
+      <section id="page-transactions" class="page">
+        <div class="section-head">
+          <div><span class="eyebrow">TRANSACTION LEDGER</span><h2>Investment Transactions</h2></div>
+          <button class="primary-btn" id="add-transaction-btn">+ Add Transaction</button>
+        </div>
+        <div class="toolbar">
+          <input id="transaction-search" class="search" placeholder="Search ticker or company..." />
+          <select id="transaction-type-filter"><option value="">All types</option><option value="BUY">BUY</option><option value="SELL">SELL</option></select>
+        </div>
+        <div class="panel table-panel"><div class="table-scroll"><table><thead><tr><th>Date</th><th>Type</th><th>Security</th><th>Qty</th><th>Price</th><th>Fee</th><th>Total</th><th></th></tr></thead><tbody id="transactions-table"></tbody></table></div></div>
+      </section>
+
+      <section id="page-portfolio" class="page">
+        <div class="section-head"><div><span class="eyebrow">OPEN POSITIONS</span><h2>Portfolio Holdings</h2></div></div>
+        <div class="panel table-panel"><div class="table-scroll"><table><thead><tr><th>Ticker</th><th>Company</th><th>Sector</th><th>Shares</th><th>Avg. Cost</th><th>Last Price</th><th>Market Value</th><th>Unrealized P/L</th></tr></thead><tbody id="holdings-table"></tbody></table></div></div>
+      </section>
+
+      <section id="page-fair-value" class="page">
+        <div class="section-head">
+          <div><span class="eyebrow">YEAR-END MEASUREMENT</span><h2>Fair Value Adjustment</h2></div>
+          <button class="primary-btn" id="post-fair-value-btn">Post Adjustment</button>
+        </div>
+        <div class="panel fva-intro">
+          <div>
+            <span class="eyebrow">31 DECEMBER / MANUAL MARKET PRICE</span>
+            <h3>Mark open investments to fair value</h3>
+            <p>Enter the market price per share at the reporting date. The system compares fair value with the carrying amount after prior adjustments and generates the unrealized gain/loss journal automatically.</p>
+          </div>
+          <div class="fva-date-wrap"><label>Adjustment Date<input type="date" id="fva-date"></label></div>
+        </div>
+        <div class="panel table-panel fva-panel">
+          <div class="table-scroll">
+            <table>
+              <thead><tr><th>Ticker</th><th>Shares</th><th>Historical Cost</th><th>Prior FV Adjustment</th><th>Carrying Amount</th><th>Market Price / Share</th><th>Fair Value</th><th>Current Adjustment</th></tr></thead>
+              <tbody id="fair-value-table"></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="fva-summary-grid">
+          <div class="metric-card"><span>Total Fair Value</span><strong id="fva-total-fair-value">Rp 0</strong><small>Based on entered year-end prices</small></div>
+          <div class="metric-card"><span>Total Carrying Amount</span><strong id="fva-total-carrying">Rp 0</strong><small>Before this adjustment</small></div>
+          <div class="metric-card"><span>Net Unrealized Adjustment</span><strong id="fva-total-adjustment">Rp 0</strong><small>Gain / (Loss) to be posted</small></div>
+        </div>
+        <div class="panel">
+          <div class="panel-head"><div><span class="eyebrow">ADJUSTMENT HISTORY</span><h3>Posted Fair Value Adjustments</h3></div></div>
+          <div class="table-scroll"><table><thead><tr><th>Date</th><th>Reference</th><th>Ticker</th><th>Shares</th><th>Market Price</th><th>Carrying Before</th><th>Fair Value</th><th>Adjustment</th></tr></thead><tbody id="fair-value-history-table"></tbody></table></div>
+        </div>
+      </section>
+
+      <section id="page-dividends" class="page">
+        <div class="section-head"><div><span class="eyebrow">INCOME</span><h2>Dividend Income</h2></div><button class="primary-btn" id="add-dividend-btn">+ Add Dividend</button></div>
+        <div class="panel table-panel"><div class="table-scroll"><table><thead><tr><th>Payment Date</th><th>Ticker</th><th>Shares</th><th>Dividend / Share</th><th>Total Income</th><th></th></tr></thead><tbody id="dividends-table"></tbody></table></div></div>
+      </section>
+
+      <section id="page-journal" class="page">
+        <div class="section-head"><div><span class="eyebrow">GENERAL LEDGER</span><h2>Journal Entries</h2></div></div>
+        <div class="panel table-panel"><div class="table-scroll"><table><thead><tr><th>Date</th><th>Reference</th><th>Description</th><th>Account</th><th>Debit</th><th>Credit</th><th>Action</th></tr></thead><tbody id="journal-table"></tbody></table></div></div>
+      </section>
+
+      <section id="page-reports" class="page">
+        <div class="section-head"><div><span class="eyebrow">FINANCIAL REPORTING</span><h2>Investment Reports</h2></div></div>
+        <div class="report-grid">
+          <div class="panel report-card"><span class="eyebrow">INVESTMENT POSITION</span><h3 id="report-invested">Rp 0</h3><p>Total net investment cost of current holdings.</p></div>
+          <div class="panel report-card"><span class="eyebrow">REALIZED GAIN</span><h3 id="report-realized">Rp 0</h3><p>Gain/loss recognized from disposed positions.</p></div>
+          <div class="panel report-card"><span class="eyebrow">UNREALIZED GAIN</span><h3 id="report-unrealized">Rp 0</h3><p>Market value less carrying cost of open positions.</p></div>
+          <div class="panel report-card"><span class="eyebrow">DIVIDEND INCOME</span><h3 id="report-dividend">Rp 0</h3><p>Dividend income recognized when cash is received.</p></div>
+        </div>
+        <div class="panel accounting-note">
+          <span class="eyebrow">ACCOUNTING LOGIC</span>
+          <h3>Automatic journal generation</h3>
+          <div class="journal-examples">
+            <div><b>BUY</b><span>Dr Investment in Shares &nbsp; / &nbsp; Cr Cash</span></div>
+            <div><b>SELL</b><span>Dr Cash &nbsp; / &nbsp; Cr Investment + Gain/Loss</span></div>
+            <div><b>DIVIDEND</b><span>Dr Cash &nbsp; / &nbsp; Cr Dividend Income</span></div>
+            <div><b>FAIR VALUE</b><span>Dr Investment in Shares / Cr Unrealized Holding Gain &nbsp; (or reverse for loss)</span></div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div class="modal-backdrop" id="transaction-modal">
+    <div class="modal">
+      <div class="modal-head"><div><span class="eyebrow">NEW ENTRY</span><h3>Add Investment Transaction</h3></div><button class="icon-btn close-modal">×</button></div>
+      <form id="transaction-form">
+        <div class="form-grid">
+          <label>Transaction Type<select name="type" required><option value="BUY">BUY</option><option value="SELL">SELL</option></select></label>
+          <label>Date<input type="date" name="date" required></label>
+          <label>Security<select name="security_id" id="security-select" required></select></label>
+          <label>Quantity<input type="number" name="quantity" min="1" step="1" required></label>
+          <label>Price / Share<input type="number" name="price" min="0" step="0.01" required></label>
+          <label>Broker Fee<input type="number" name="fee" min="0" step="0.01" value="0" required></label>
+        </div>
+        <div class="calc-box"><span>Estimated transaction value</span><strong id="transaction-preview">Rp 0</strong></div>
+        <button class="primary-btn full" type="submit">Save Transaction</button>
+      </form>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="dividend-modal">
+    <div class="modal">
+      <div class="modal-head"><div><span class="eyebrow">INCOME ENTRY</span><h3>Add Dividend Receipt</h3></div><button class="icon-btn close-modal">×</button></div>
+      <form id="dividend-form">
+        <div class="form-grid">
+          <label>Security<select name="security_id" id="dividend-security-select" required></select></label>
+          <label>Payment Date<input type="date" name="date" required></label>
+          <label>Shares<input type="number" name="shares" min="1" step="1" required></label>
+          <label>Dividend / Share<input type="number" name="dps" min="0" step="0.01" required></label>
+        </div>
+        <div class="calc-box"><span>Total dividend income</span><strong id="dividend-preview">Rp 0</strong></div>
+        <button class="primary-btn full" type="submit">Record Dividend</button>
+      </form>
+    </div>
+  </div>
+
+  <script src="js/config.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
